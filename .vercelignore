@@ -1,0 +1,10 @@
+node_modules
+.git
+.env
+.env.local
+.env.production
+logs
+*.log
+README.md
+.gitignore
+backups

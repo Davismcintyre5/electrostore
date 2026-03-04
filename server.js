@@ -4,8 +4,8 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
 const http = require('http');
-const { initializeSocket } = require('./config/socket');
-const { errorHandler, notFound } = require('./middleware/errorHandler');
+const compression = require('compression');
+const helmet = require('helmet');
 
 // Load env vars
 dotenv.config();
@@ -27,13 +27,15 @@ const adminRoutes = require('./routes/admin');
 const webhookRoutes = require('./routes/webhooks');
 const dashboardRoutes = require('./routes/dashboard');
 
+// Import middleware
+const { errorHandler, notFound } = require('./middleware/errorHandler');
+const { requestLogger } = require('./middleware/logger');
+const { securityMiddleware } = require('./middleware/sanitize');
+// Rate limiter removed - not needed for Pxxl App
+
 // Initialize express app
 const app = express();
 const server = http.createServer(app);
-
-// Initialize Socket.io
-const io = initializeSocket(server);
-app.set('io', io);
 
 // ===========================================
 // E - COMMERCE SERVER
@@ -42,15 +44,31 @@ console.log('\n' + '='.repeat(43));
 console.log('E - COMMERCE SERVER');
 console.log('='.repeat(43) + '\n');
 
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
+
+// Compression
+app.use(compression());
+
 // Body parser
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // CORS configuration
+const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000';
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001'],
+  origin: corsOrigin.split(','),
   credentials: true
 }));
+
+// Request logging
+app.use(requestLogger);
+
+// Apply security middleware (sanitization only - no rate limiting)
+app.use(securityMiddleware);
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -78,6 +96,20 @@ app.get('/health', (req, res) => {
     success: true,
     message: 'Server is healthy',
     timestamp: new Date(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV
+  });
+});
+
+// Debug endpoint (remove in production)
+app.get('/debug', (req, res) => {
+  res.json({
+    node_version: process.version,
+    environment: process.env.NODE_ENV,
+    mongodb_uri_set: !!process.env.MONGODB_URI,
+    port: process.env.PORT,
+    cors_origin: process.env.CORS_ORIGIN,
+    memory: process.memoryUsage(),
     uptime: process.uptime()
   });
 });
@@ -99,17 +131,25 @@ app.use(errorHandler);
 // MongoDB connection
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
     mongoose.set('strictQuery', false);
-    console.log('DB: Connected');
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     
     // Initialize default admin
     await initializeAdmin();
     
     return true;
   } catch (error) {
-    console.error(`DB: Connection Failed - ${error.message}`);
-    process.exit(1);
+    console.error(`❌ MongoDB Connection Failed: ${error.message}`);
+    if (process.env.NODE_ENV === 'production') {
+      console.log('⏳ Retrying connection in 5 seconds...');
+      setTimeout(connectDB, 5000);
+    } else {
+      process.exit(1);
+    }
   }
 };
 
@@ -129,10 +169,12 @@ const initializeAdmin = async () => {
         isAdmin: true,
         isActive: true
       });
-      console.log('👑 Default admin created');
+      console.log('👑 Default admin created successfully');
+    } else {
+      console.log('👑 Admin user already exists');
     }
   } catch (error) {
-    console.error('Admin initialization error:', error);
+    console.error('❌ Admin initialization error:', error);
   }
 };
 
@@ -142,14 +184,15 @@ const startServer = async () => {
     await connectDB();
 
     const PORT = process.env.PORT || 3000;
-    server.listen(PORT, () => {
-      console.log(`Port: ${PORT}`);
-      console.log(`Mode: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`M-Pesa: ${process.env.NODE_ENV === 'production' ? 'production' : 'sandbox'}`);
-      console.log('='.repeat(43) + '\n');
-      console.log('✅ MongoDB Connected');
-      console.log(`📍 Customer Portal: http://localhost:${PORT}`);
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`\n🚀 Server started successfully!`);
+      console.log(`📌 Port: ${PORT}`);
+      console.log(`🔧 Mode: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`💰 M-Pesa: ${process.env.NODE_ENV === 'production' ? 'production' : 'sandbox'}`);
+      console.log(`\n📍 Customer Portal: http://localhost:${PORT}`);
       console.log(`📍 Admin Dashboard: http://localhost:${PORT}/admin`);
+      console.log(`📍 Health Check: http://localhost:${PORT}/health`);
+      console.log('\n' + '='.repeat(43) + '\n');
     });
 
     // Graceful shutdown
@@ -157,48 +200,60 @@ const startServer = async () => {
     process.on('SIGINT', gracefulShutdown);
 
   } catch (error) {
-    console.error(`Server startup error: ${error.message}`);
-    process.exit(1);
+    console.error(`❌ Server startup error: ${error.message}`);
+    if (process.env.NODE_ENV === 'production') {
+      console.log('⏳ Retrying server start in 5 seconds...');
+      setTimeout(startServer, 5000);
+    } else {
+      process.exit(1);
+    }
   }
 };
 
 // Graceful shutdown
 const gracefulShutdown = async () => {
-  console.log('\n\nReceived shutdown signal, closing connections...');
+  console.log('\n\n📴 Received shutdown signal, closing connections...');
   
   try {
-    // Close socket connections
-    const io = app.get('io');
-    if (io) {
-      io.close(() => {
-        console.log('Socket.IO server closed');
-      });
-    }
-    
     await mongoose.connection.close();
-    console.log('MongoDB connection closed');
+    console.log('✅ MongoDB connection closed');
     
     server.close(() => {
-      console.log('HTTP server closed');
+      console.log('✅ HTTP server closed');
+      console.log('👋 Goodbye!');
       process.exit(0);
     });
   } catch (error) {
-    console.error('Error during shutdown:', error);
+    console.error('❌ Error during shutdown:', error);
     process.exit(1);
   }
 };
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Rejection:', err);
+  console.error('❌ Unhandled Rejection:', err);
+  if (process.env.NODE_ENV === 'production') {
+    // Don't exit in production, just log
+    console.error(err);
+  } else {
+    process.exit(1);
+  }
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
+  console.error('❌ Uncaught Exception:', err);
+  if (process.env.NODE_ENV === 'production') {
+    // Don't exit in production, just log
+    console.error(err);
+  } else {
+    process.exit(1);
+  }
 });
 
-// Start the server
-startServer();
+// Start the server only if not in Vercel environment
+if (process.env.VERCEL !== '1') {
+  startServer();
+}
 
 module.exports = { app, server };
