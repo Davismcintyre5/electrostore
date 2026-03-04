@@ -1,0 +1,78 @@
+C:\Users\PC\Desktop\ElectroStore\
+├── config/
+│   ├── database.js
+│   ├── passport.js
+│   ├── cloudinary.js
+│   └── email.js
+│
+├── models/
+│   ├── User.js           # Staff/admins
+│   ├── Product.js        # Products inventory
+│   ├── Order.js          # Customer orders
+│   ├── Transaction.js    # Sales transactions
+│   ├── Promotion.js      # Promotions/discounts
+│   ├── Customer.js       # Customers
+│   ├── Account.js        # Business account
+│   ├── Withdrawal.js     # Withdrawals from account
+│   ├── Report.js         # Saved reports
+│   ├── Setting.js        # System settings
+│   ├── ShippingRule.js   # Shipping rules
+│   ├── Notification.js   # Notifications
+│   └── AuditLog.js       # Activity logs
+│
+├── routes/
+│   ├── auth.js           # Login/register
+│   ├── users.js          # User management
+│   ├── products.js       # Product CRUD
+│   ├── orders.js         # Order management
+│   ├── payments.js       # M-Pesa payments
+│   ├── promotions.js     # Promo CRUD
+│   ├── customers.js      # Customer management
+│   ├── transactions.js   # Transaction history
+│   ├── account.js        # Account balance/withdrawals
+│   ├── reports.js        # Report generation
+│   ├── settings.js       # System settings
+│   ├── shipping.js       # Shipping rules
+│   ├── admin.js          # Admin dashboard
+│   ├── webhooks.js       # M-Pesa callbacks
+│   └── dashboard.js      # Dashboard stats
+│
+├── controllers/          # Business logic for each route
+│
+├── middleware/
+│   ├── auth.js           # JWT verification
+│   ├── admin.js          # Admin role check
+│   ├── errorHandler.js   # Global error handling
+│   ├── validation.js     # Input validation
+│   ├── rateLimiter.js    # Rate limiting
+│   ├── upload.js         # File uploads
+│   ├── logger.js         # Request logging
+│   ├── cache.js          # Response caching
+│   └── sanitize.js       # Data sanitization
+│
+├── utils/
+│   ├── mpesa.js          # M-Pesa STK push
+│   ├── emailService.js   # Email notifications
+│   ├── smsService.js     # SMS notifications
+│   ├── generateReport.js # Report generation
+│   ├── pdfGenerator.js   # PDF creation
+│   ├── excelGenerator.js # Excel exports
+│   ├── fileUpload.js     # File handling
+│   ├── dateHelpers.js    # Date utilities
+│   ├── currencyHelpers.js # Currency formatting
+│   ├── validators.js     # Data validation
+│   ├── constants.js      # App constants
+│   ├── logger.js         # Winston logger
+│   ├── apiFeatures.js    # API query features
+│   └── sendNotification.js # Notifications
+│
+├── public/
+│   ├── index.html        # Customer portal
+│   └── admin/
+│       └── index.html    # Admin dashboard
+│
+├── server.js             # Main app entry
+├── package.json          # Dependencies
+├── .env                  # Environment variables
+├── .gitignore            # Git ignore
+└── README.md             # Documentation
