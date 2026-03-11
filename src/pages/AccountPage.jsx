@@ -11,6 +11,11 @@ const AccountPage = () => {
     // Optionally update local user state if needed
   }
 
+  // If user is not logged in (should not happen because route is protected)
+  if (!user) {
+    return <div className="text-center py-10">Please log in to view your account.</div>
+  }
+
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-6">My Account</h1>
@@ -19,10 +24,12 @@ const AccountPage = () => {
           <div className="bg-white p-4 rounded-lg shadow">
             <div className="text-center mb-4">
               <div className="bg-indigo-100 rounded-full h-20 w-20 flex items-center justify-center mx-auto">
-                <span className="text-2xl font-bold text-indigo-600">{user?.name.charAt(0)}</span>
+                <span className="text-2xl font-bold text-indigo-600">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : '?'}
+                </span>
               </div>
-              <h2 className="mt-2 font-semibold">{user?.name}</h2>
-              <p className="text-sm text-gray-600">{user?.email}</p>
+              <h2 className="mt-2 font-semibold">{user?.name || 'User'}</h2>
+              <p className="text-sm text-gray-600">{user?.email || ''}</p>
             </div>
             <nav className="space-y-1">
               <button

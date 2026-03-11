@@ -42,7 +42,7 @@ const Header = () => {
               <div className="relative">
                 <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="flex items-center space-x-1">
                   <UserIcon className="h-6 w-6 text-gray-700" />
-                  <span className="hidden sm:inline text-sm">{user.name}</span>
+                  <span className="hidden sm:inline text-sm">{user.name || 'User'}</span>
                 </button>
                 {isMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg py-1">
