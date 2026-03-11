@@ -1,0 +1,72 @@
+customer/
+├── public/
+│   └── index.html
+├── src/
+│   ├── assets/
+│   ├── components/
+│   │   ├── common/
+│   │   │   ├── Header.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── Layout.jsx
+│   │   │   └── ProtectedRoute.jsx
+│   │   ├── products/
+│   │   │   ├── ProductCard.jsx
+│   │   │   └── ProductFilter.jsx
+│   │   ├── cart/
+│   │   │   └── CartItem.jsx
+│   │   ├── checkout/
+│   │   │   └── AddressSelector.jsx
+│   │   ├── account/
+│   │   │   ├── ProfileForm.jsx
+│   │   │   └── PasswordForm.jsx
+│   │   ├── addresses/
+│   │   │   ├── AddressList.jsx
+│   │   │   └── AddressForm.jsx
+│   │   ├── orders/
+│   │   │   ├── OrderCard.jsx
+│   │   │   └── OrderDetails.jsx
+│   │   └── notifications/
+│   │       └── NotificationBell.jsx
+│   ├── pages/
+│   │   ├── HomePage.jsx
+│   │   ├── ProductsPage.jsx
+│   │   ├── ProductDetailsPage.jsx
+│   │   ├── PromosPage.jsx
+│   │   ├── CartPage.jsx
+│   │   ├── CheckoutPage.jsx
+│   │   ├── LoginPage.jsx
+│   │   ├── RegisterPage.jsx
+│   │   ├── AccountPage.jsx
+│   │   ├── AddressesPage.jsx
+│   │   ├── WishlistPage.jsx
+│   │   ├── OrdersPage.jsx
+│   │   ├── OrderDetailsPage.jsx
+│   │   └── ContactPage.jsx
+│   ├── services/
+│   │   ├── api.js
+│   │   ├── auth.js
+│   │   ├── products.js
+│   │   ├── cart.js
+│   │   ├── orders.js
+│   │   ├── addresses.js
+│   │   ├── wishlist.js
+│   │   └── notifications.js
+│   ├── context/
+│   │   ├── AuthContext.jsx
+│   │   └── CartContext.jsx
+│   ├── hooks/
+│   │   ├── useAuth.js
+│   │   └── useDebounce.js
+│   ├── utils/
+│   │   └── helpers.js
+│   ├── App.jsx
+│   ├── App.css
+│   ├── main.jsx
+│   └── index.css
+├── .env
+├── .env.example
+├── vite.config.js
+├── tailwind.config.js
+├── postcss.config.js
+├── package.json
+└── README.md
